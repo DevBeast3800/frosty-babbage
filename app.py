@@ -21,7 +21,12 @@ app = Flask(__name__)
 
 class ReshipScraper:
     def __init__(self):
-        self.driver = PhantomJS()
+        # options = selenium.webdriver.ChromeOptions()
+        # options.add_argument('headless')
+
+        # self.driver = selenium.webdriver.Chrome(executable_path=r'C:\chromedriver_win32\chromedriver.exe', chrome_options=options)
+        self.driver = PhantomJS("./phantomjs.exe")
+        
         self.driver.get("about:blank")
         self.driver.delete_all_cookies()
 
@@ -30,26 +35,28 @@ class ReshipScraper:
         self.driver.delete_all_cookies()
         try:
             # Extract the required information from the form data
-            reship_email = 'chungtin+{}@linkdayne.com'.format(name)
+            reship_email = 'admin+{}@shippingtest1.info'.format(name)
 
             # Use Selenium to interact with the Reship signup page
             self.driver.get("https://ship.reship.com/register/free")
             self.driver.execute_script('localStorage.clear();')
             time.sleep(1)
-            if ' Logout' in self.driver.page_source:
-                self.driver.delete_all_cookies()
-                time.sleep(5)
-                self.driver.get("https://ship.reship.com/register/free")
-                self.driver.execute_script('localStorage.clear();')
+            # if ' Logout' in self.driver.page_source:
+            #     self.driver.delete_all_cookies()
+            #     time.sleep(5)
+            #     self.driver.get("https://ship.reship.com/register/free")
+            #     self.driver.execute_script('localStorage.clear();')
 
             name_field = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div[1]/div/div[2]/div/div[2]/input')))
             name_field.send_keys(name)
+            print(name_field)
             email_field = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div[1]/div/div[2]/div/div[3]/input')))
             email_field.send_keys(reship_email)
             phone_field = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div[1]/div/div[2]/div/div[5]/div/input')))
             phone_field.send_keys(phone)
             country_field = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div[1]/div/div[2]/div/div[4]/select')))
             country_field.send_keys(country)
+            print(country_field)
             
 
             verify_button = self.driver.find_element_by_css_selector("div.btn.btn-primary")
@@ -57,34 +64,38 @@ class ReshipScraper:
             time.sleep(4)
             
             # Replace with the email address you want to fetch messages from
-            user_id = 'chungtin@linkdayne.com'
+            user_id = 'admin@shippingtest1.info'
             
             creds = None
-            if os.path.exists('token.json'):
-                creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-                # If there are no (valid) credentials available, let the user log in.
-            if not creds or not creds.valid:
-                if creds and creds.expired and creds.refresh_token:
-                    creds.refresh(Request())
-                else:
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        'credentials.json', SCOPES)
-                    creds = flow.run_local_server(port=0)
-                # Save the credentials for the next run
-                with open('token.json', 'w') as token:
-                    token.write(creds.to_json())
+            # if os.path.exists('token.json'):
+            #     creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+            #     # If there are no (valid) credentials available, let the user log in.
+            # if not creds or not creds.valid:
+            #     print(creds.valid)
+
+            #     if creds and creds.expired and creds.refresh_token:
+            #         creds.refresh(Request())
+            #     else:
+            #         flow = InstalledAppFlow.from_client_secrets_file(
+            #             'credentials.json', SCOPES)
+            #         creds = flow.run_local_server(port=0)
+            #     # Save the credentials for the next run
+            #     with open('token.json', 'w') as token:
+            #         token.write(creds.to_json())
 
             if os.path.exists('token.json'):
                 creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+                # print(creds)
                 service = build('gmail', 'v1', credentials=creds)
                 results = service.users().messages().list(userId=user_id).execute()
                 messages = results.get('messages', [])
+                # print(messages)
 
                 if messages:
                     for message in messages:
                         msg = service.users().messages().get(userId='me', id=message['id']).execute()
                         var = msg['snippet'].strip()[-6:]
-                        print(var)
+                        # print(msg)
                         code_input = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div[1]/div/div[2]/div/div[6]/input')))
                         code_input_has_value = False
                         while not code_input_has_value:
@@ -116,10 +127,51 @@ class ReshipScraper:
             return page
                 
 
+    def get_ship_data(self, len, width, height, weight, city, countryCode, postalCode):
+        wait = WebDriverWait(self.driver, 20)
+        self.driver.delete_all_cookies()
+        try:
+            self.driver.get("https://ship.reship.com/calculator")
+            self.driver.execute_script('localStorage.clear();')
+            time.sleep(1)
+            length_field = self.driver.find_element_by_css_selector('.calc-input:first-child')
+            length_field.send_keys(len)
+            width_field = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[1]/div[2]/div[2]/input')
+            width_field.send_keys(width)
+            height_field = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[1]/div[2]/div[3]/input')
+            height_field.send_keys(height)
+            weight_field = self.driver.find_element_by_css_selector("div.calc-weight>input")
+            weight_field.send_keys(weight)
+            ware_field = self.driver.find_element_by_css_selector('div.apr-new-store-flag:first-child')
+            ware_field.click()
+            time.sleep(1)
+            country_field = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[3]/div[2]/select')))
+            country_field.send_keys(countryCode)
+            time.sleep(1)
+            city_field = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[2]/input[1]')
+            city_field.send_keys(city)
+            postalCode_field = self.driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[2]/input[2]')
+            postalCode_field.send_keys(postalCode)
+
+            verify_button = self.driver.find_element_by_css_selector("div.btn.btn-primary")
+            verify_button.click()
+            time.sleep(170)
+            page = self.driver.find_element_by_css_selector("div.ship-quotes").get_attribute("outerHTML")
+            # page = self.driver.page_source
+            self.driver.delete_all_cookies()
+            self.driver.quit
+            return page
+        except TimeoutException:
+            # page = self.driver.page_source
+            self.driver.delete_all_cookies()
+            self.driver.quit
+            return "Network error"
+
+
     
 reship_scraper = ReshipScraper()
 
-@app.route('/signup123')
+@app.route('/signup')
 def home():
     return render_template('home.html')
 
@@ -175,17 +227,26 @@ def signup():
 @app.route('/shipEstimate', methods=['POST'])
 def ship_estimate():
     # Get the request data
-    data = request.data
-    headers = request.headers
+    # data = request.data
+    len = request.json['len']
+    width = request.json['width']
+    height = request.json['height']
+    weight = request.json['weight']
+    city = request.json['city']
+    countryCode = request.json['countryCode']
+    postalCode = request.json['postalCode']
+    result = reship_scraper.get_ship_data(len, width, height, weight, city, countryCode, postalCode)
+    # headers = request.headers
 
-    # Make a copy of the request data
-    copied_data = data
+    # # Make a copy of the request data
+    # copied_data = data
 
-    # Post the copied request to another endpoint
-    response = requests.post('https://api-customer.reship.com/shipEstimate', data=copied_data, headers=headers)
+    # # Post the copied request to another endpoint
+    # response = requests.post('https://api-customer.reship.com/web/shipEstimate', data=copied_data, headers=headers)
 
     # Return the response from the other endpoint
-    return response.content, response.status_code
+    # return response.content, response.status_code
+    return result
 
 if __name__ == '__main__':
     app.run(debug=True)
