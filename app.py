@@ -36,24 +36,8 @@ def ship_estimate():
     city = request.json['city']
     countryCode = request.json['countryCode']
     postalCode = request.json['postalCode']
-    driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
-    driver.delete_all_cookies()
-    wait = WebDriverWait(driver, 20)
-
-    driver.get("https://ship.reship.com/calculator")
-    driver.execute_script('localStorage.clear();')
-    time.sleep(1)
-   
-    width_field = driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[1]/div[2]/div[2]/input')
-    width_field.send_keys(width)
-    height_field = driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[1]/div[2]/div[3]/input')
-    height_field.send_keys(height)
     
-    # page = driver.find_element_by_css_selector("div.ship-quotes").get_attribute("outerHTML")
-    page = driver.page_source
-    driver.delete_all_cookies()
-    driver.quit
-    return page
+    return width
 
 
 if __name__ == '__main__':
