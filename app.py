@@ -43,30 +43,14 @@ def ship_estimate():
     driver.get("https://ship.reship.com/calculator")
     driver.execute_script('localStorage.clear();')
     time.sleep(1)
-    length_field = driver.find_element_by_css_selector('.calc-input:first-child')
-    length_field.send_keys(len)
+   
     width_field = driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[1]/div[2]/div[2]/input')
     width_field.send_keys(width)
     height_field = driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[1]/div[2]/div[3]/input')
     height_field.send_keys(height)
-    weight_field = driver.find_element_by_css_selector("div.calc-weight>input")
-    weight_field.send_keys(weight)
-    ware_field = driver.find_element_by_css_selector('div.apr-new-store-flag:first-child')
-    ware_field.click()
-    time.sleep(1)
-    country_field = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div/div[3]/div[2]/select')))
-    country_field.send_keys(countryCode)
-    time.sleep(1)
-    city_field = driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[2]/input[1]')
-    city_field.send_keys(city)
-    postalCode_field = driver.find_element_by_xpath('/html/body/div[1]/div/div[3]/div[2]/input[2]')
-    postalCode_field.send_keys(postalCode)
-
-    verify_button = driver.find_element_by_css_selector("div.btn.btn-primary")
-    verify_button.click()
-    time.sleep(50)
-    page = driver.find_element_by_css_selector("div.ship-quotes").get_attribute("outerHTML")
-    # page = driver.page_source
+    
+    # page = driver.find_element_by_css_selector("div.ship-quotes").get_attribute("outerHTML")
+    page = driver.page_source
     driver.delete_all_cookies()
     driver.quit
     return page
